@@ -50,29 +50,38 @@ if __name__ == "__main__":
         prog='Encoder',
         description='Encode chunks of videos into binary files with hashes')
     parser.add_argument('filepath', type=str,
-                        help='file to chunk and hash. Please provide no spaces or .\'s inside the file name')
-    parser.add_argument('--method', action='store_true', default="forward-backwards",
+                        help='file to chunk and hash. Please provide no spaces in the file name')
+    parser.add_argument('--method', default="forward-backwards",
                         help='forward-backwards or backwards-seeking')
-    parser.add_argument('--chunk-size', action='store_true', default=1048576,
+    parser.add_argument('--chunk-size', default=1048576,
                         help='the size of chunks you want in bytes, default is 1048576')
+    parser.add_argument('--logs', action='store_true',
+                        help='Set logs to higher verbosity')
     args = parser.parse_args()
 
+    if args.logs:
+        logging.basicConfig(level=logging.ERROR)
+    else:
+        logging.basicConfig(level=logging.NOTSET)
+
     h0, hashed_results = None, None
+    directory_name = args.filepath[0:args.filepath.rfind('.')]
 
     if args.method == "forward-backwards":
         h0, hashed_results = encode_forward_backwards(file_path=args.filepath, chunk_size=args.chunk_size)
     elif args.method == "backwards-seeking":
         pass
     try:
-        os.mkdir(args.filepath[0:args.filepath.rfind('.')])
+        os.mkdir(directory_name)
     except FileExistsError as fee:
         # Do nothing if the directory already exists
         pass
     # Change to the directory
-    os.chdir("FLIRT_TRAINS")
+    os.chdir(directory_name)
 
     # Write out the binary files
     open("h0.bin", "wb").write(h0)
     for i in range(0, len(hashed_results)):
         open(f"b{i}h{i+1}.bin", "wb").write(hashed_results[i])
-    sys.exit(0)
+
+    print("Successfully chunked and hashed file.")

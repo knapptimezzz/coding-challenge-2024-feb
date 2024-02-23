@@ -9,7 +9,71 @@
 
 Should be run first as without encoded files, there's nothing to decode.
 
+#### Get help menu
+
+```shell
+python3 encoder.py -h
+```
+
+Options are:
+
+```shell
+usage: Encoder [-h] [--method METHOD] [--chunk-size CHUNK_SIZE] [--logs] filepath
+
+Encode chunks of videos into binary files with hashes
+
+positional arguments:
+  filepath              file to chunk and hash. Please provide no spaces in the file name
+
+options:
+  -h, --help            show this help message and exit
+  --method METHOD       forward-backwards or backwards-seeking
+  --chunk-size CHUNK_SIZE
+                        the size of chunks you want in bytes, default is 1048576
+  --logs                Set logs to higher verbosity
+```
+
+For further information about methods see [Thoughts / Process](#thoughts-/-process) below
+
+#### Encode a video file
+
+```shell
+python3 encoder.py FLIRT_TRAINS.mp4
+```
+
 ### Decoder.py
+
+#### Get help menu
+
+```shell
+python3 decoder.py -h
+```
+
+Options are:
+
+```shell
+usage: Decoder [-h] [--method METHOD] [--chunk-size CHUNK_SIZE] [--logs] filepath
+
+Decode chunks of videos into binary files with hashes
+
+positional arguments:
+  filepath              folder path of the chunks + hashes. Please provide no spaces in the file name
+
+options:
+  -h, --help            show this help message and exit
+  --method METHOD       forward-backwards or backwards-seeking
+  --chunk-size CHUNK_SIZE
+                        the size of chunks you want in bytes, default is 1048576
+  --logs                Set logs to higher verbosity
+```
+
+#### Encode a video file
+
+```shell
+python3 decoder.py FLIRT_TRAINS
+```
+
+Please note that the encoder will make a folder name of the same name as the file minus the extension. Please update the field if you have changed the name of the directory.
 
 ## Thoughts / Process
 
