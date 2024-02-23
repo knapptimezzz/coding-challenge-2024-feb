@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 import argparse as ap
+import math
 
 
 def encode_forward_backwards(file_path, chunk_size=1048576):
@@ -43,6 +44,47 @@ def encode_forward_backwards(file_path, chunk_size=1048576):
     return hashlib.sha256(hashed_binaries[0]).digest(), hashed_binaries
 
 
+def encode_backwards_seeking(file_path, chunk_size=1048576):
+    """
+    Take a file, the chunk size and create the hashes for the parts
+    :param file_path: The path to the file
+    :param chunk_size: The size of the chunks you want in bytes, default is 1MB
+    :return: H0 and an array of binary chunks with hashes B0||H1, B1||H2, etc.
+    """
+
+    # Setup known values for later computation
+    hashed_binaries = []
+    chunks = math.floor(os.path.getsize(file_path) / chunk_size)
+    previous_chunk = None
+
+    # Open file for reading
+    with open(file_path, 'rb') as video_file:
+        while chunks >= 0:
+            try:
+                video_file.seek(chunks * chunk_size)
+                chunk = video_file.read(chunk_size)
+                if previous_chunk is None:
+                    hashed_binaries.append(chunk)
+                    previous_chunk = chunk
+                elif previous_chunk is not None:
+                    hashed_chunk = chunk + hashlib.sha256(previous_chunk).digest()
+                    hashed_binaries.append(hashed_chunk)
+                    previous_chunk = hashed_chunk
+                else:
+                    break
+
+                chunks -= 1
+            # Do some basic error handling for now to know that something bad happened
+            except Exception as e:
+                logging.error('Encoding error: {}'.format(e))
+
+    hashed_binaries.reverse()
+
+    logging.debug("Encoding complete. Encoded chunks: {}".format(hashed_binaries))
+
+    return hashlib.sha256(hashed_binaries[0]).digest(), hashed_binaries
+
+
 if __name__ == "__main__":
 
     # Enable some arguments to be passed
@@ -60,9 +102,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.logs:
-        logging.basicConfig(level=logging.ERROR)
+        logging.basicConfig(level=logging.DEBUG)
     else:
-        logging.basicConfig(level=logging.NOTSET)
+        logging.basicConfig(level=logging.ERROR)
 
     h0, hashed_results = None, None
     directory_name = args.filepath[0:args.filepath.rfind('.')]
@@ -70,7 +112,7 @@ if __name__ == "__main__":
     if args.method == "forward-backwards":
         h0, hashed_results = encode_forward_backwards(file_path=args.filepath, chunk_size=args.chunk_size)
     elif args.method == "backwards-seeking":
-        pass
+        h0, hashed_results = encode_backwards_seeking(file_path=args.filepath, chunk_size=args.chunk_size)
     try:
         os.mkdir(directory_name)
     except FileExistsError as fee:

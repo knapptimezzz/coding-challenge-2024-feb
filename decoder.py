@@ -28,7 +28,7 @@ def decode(file_path, chunk_size=1048576):
         # Check that the hashes match
         if hash_key != curr_hash:
             logging.error("\nCurr hash: {}\nHash  Key: {}".format(curr_hash, hash_key))
-            return InvalidHashDetected()
+            raise InvalidHashDetected()
         else:
             logging.debug("\nCurr hash: {}\nHash  Key: {}".format(curr_hash, hash_key))
             hash_key = file_content[-32:]
@@ -40,8 +40,6 @@ if __name__ == "__main__":
         description='Decode chunks of videos into binary files with hashes')
     parser.add_argument('filepath', type=str,
                         help='folder path of the chunks + hashes. Please provide no spaces in the file name')
-    parser.add_argument('--method', default="forward-backwards",
-                        help='forward-backwards or backwards-seeking')
     parser.add_argument('--chunk-size', default=1048576,
                         help='the size of chunks you want in bytes, default is 1048576')
     parser.add_argument('--logs', action='store_true',
@@ -51,7 +49,7 @@ if __name__ == "__main__":
     if args.logs:
         logging.basicConfig(level=logging.DEBUG)
     else:
-        logging.basicConfig(level=logging.NOTSET)
+        logging.basicConfig(level=logging.ERROR)
 
     try:
         decode(file_path="FLIRT_TRAINS", chunk_size=args.chunk_size)

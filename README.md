@@ -61,7 +61,6 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  --method METHOD       forward-backwards or backwards-seeking
   --chunk-size CHUNK_SIZE
                         the size of chunks you want in bytes, default is 1048576
   --logs                Set logs to higher verbosity
