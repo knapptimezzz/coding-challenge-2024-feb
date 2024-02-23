@@ -2,7 +2,7 @@
 
 ## How to Run / Execute
 
-* All libraries are default python libraries
+* All libraries are default python libraries (no `pip install` required)
 * This was developed and tested using Python `3.10`
 
 ### Encoder.py
@@ -76,7 +76,7 @@ Please note that the encoder will make a folder name of the same name as the fil
 
 ## Thoughts / Process
 
-I had many thoughts when working on this. My first line of thinking is to actually print off the documents (which you can't always do) and grab a pen and paper and start to plot out what it is that I want this code to do. I know I need to main components, `encoder.py` and `decoder.py`. So I'll start with the encoder first.
+I had many thoughts when working on this. My first line of thinking is to actually print off the document (which you can't always do) and grab a pen and paper and start to plot out what it is that I want this code to do. I know I need to main components, `encoder.py` and `decoder.py`. So I'll start with the encoder first.
 
 A different approach would have been to start with decoder and used it to "test" that my encoder works, but I chose differently. I started with some logic Pros / Cons. There really was two ways that I saw to do this encoding:
 
@@ -89,7 +89,7 @@ There are several pros and cons to this that I'll discuss here
 
 By doing it in two steps parse the file and then reverse backwards to hash, the file and the code is easier to read by all programmers. It might take more lines of code and added time complexity but it comes at ease of reading. 
 
-The added time complexity could also be negated (in my opinion) as thinking at a larger system level this event always happens just once during the initial upload of a video. Having uploaded videos to Youtube, it takes a VERY long time to upload and encode and transcode the video for several formats, etc. It's a computationally intensive process that just requires time to do. However, the intent and idea is that once this process is completed, it's allows for reuse. Same goes for the chunking and hashing.
+The added time complexity could also be negated (in my opinion) as thinking at a larger system level this event always happens just once during the initial upload of a video. Having uploaded videos to YouTube, it takes a VERY long time to upload and encode and transcode the video for several formats, etc. It's a computationally intensive process that just requires time to do. However, the intent and idea is that once this process is completed, it's allows for reuse. Same goes for the chunking and hashing.
 
 ### Backwards Seeking
 
@@ -97,7 +97,13 @@ Now one could argue that the **whole purpose** of Kontain is that it's about how
 
 ### Other Thoughts
 
+* I also decided to implement both as the output to be consumed by the decoder is the same. So I decided to implement the two encoder methods the same way. `Backwards-Seeking` is more performant in terms of time space but both are relatively fast with the file sizes being small.
+
+
 * I made the file sizes 1MB instead of 1KB. Seemed more reasonable when talking about video files to have a somewhat larger size, but this is just the default. Could be switched to a smaller size / configurable for that.
 
 
-* I could have also setup a Flask or Django webserver to handle the process of the video requests for the `decoder.py` file but I am treating the reading of binary chunks from a folder as getting parts served to the `decoder.py` file.
+* I could have also set up a Flask or Django webserver to handle the process of the video requests for the `decoder.py` file but I am treating the reading of binary chunks from a folder as getting parts served to the `decoder.py` file.
+
+
+* I implemented some basic logging to get messages out of the code if you wanted to compare some hashes on the command line.

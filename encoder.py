@@ -1,7 +1,6 @@
 import hashlib
 import logging
 import os
-import sys
 import argparse as ap
 import math
 

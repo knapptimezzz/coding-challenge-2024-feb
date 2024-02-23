@@ -1,8 +1,8 @@
 import hashlib
 import logging
 import os
-import glob
 import argparse as ap
+import glob
 
 
 class InvalidHashDetected(Exception):
