@@ -3,6 +3,7 @@ import logging
 import os
 import argparse as ap
 import math
+import sys
 
 
 def encode_forward_backwards(file_path, chunk_size=1048576):
@@ -10,15 +11,21 @@ def encode_forward_backwards(file_path, chunk_size=1048576):
     Take a file, the chunk size and create the hashes for the parts
     :param file_path: The path to the file
     :param chunk_size: The size of the chunks you want in bytes, default is 1MB
-    :return: H0 and an array of binary chunks with hashes B0||H1, B1||H2, etc.
+    :return: Nothing
     """
 
     # Setup known values for later computation
     hashed_binaries = []
+    directory_name = file_path[0:file_path.rfind('.')]
+
+    try:
+        os.mkdir(directory_name)
+    except FileExistsError as fee:
+        # Do nothing if the directory already exists
+        pass
 
     # Open file for reading
     with open(file_path, 'rb') as video_file:
-
         while True:
             # Read until the final b'' indicator
             try:
@@ -34,13 +41,14 @@ def encode_forward_backwards(file_path, chunk_size=1048576):
     # Encode / hash the chunks
     for i in range(len(hashed_binaries) - 2, -1, -1):
         hashed_binaries[i] = hashed_binaries[i] + hashlib.sha256(hashed_binaries[i + 1]).digest()
-        # Some error checking that the sha256 didn't add extra bytes, etc.
         if len(hashed_binaries[i]) != chunk_size + 32:
             logging.error('Chunk size is off!')
+            return sys.exit(1)
+        open(f"{directory_name}/b{i}h{i + 1}.bin", "wb").write(hashed_binaries[i])
+    open(f"{directory_name}/h{0}.bin", "wb").write(hashlib.sha256(hashed_binaries[0]).digest())
 
-    logging.debug("Encoding complete. Encoded chunks: {}".format(hashed_binaries))
-
-    return hashlib.sha256(hashed_binaries[0]).digest(), hashed_binaries
+    logging.debug("Hashing complete")
+    return
 
 
 def encode_backwards_seeking(file_path, chunk_size=1048576):
@@ -48,13 +56,19 @@ def encode_backwards_seeking(file_path, chunk_size=1048576):
     Take a file, the chunk size and create the hashes for the parts
     :param file_path: The path to the file
     :param chunk_size: The size of the chunks you want in bytes, default is 1MB
-    :return: H0 and an array of binary chunks with hashes B0||H1, B1||H2, etc.
+    :return: Nothing
     """
 
     # Setup known values for later computation
-    hashed_binaries = []
     chunks = math.floor(os.path.getsize(file_path) / chunk_size)
     previous_chunk = None
+    directory_name = file_path[0:file_path.rfind('.')]
+
+    try:
+        os.mkdir(directory_name)
+    except FileExistsError as fee:
+        # Do nothing if the directory already exists
+        pass
 
     # Open file for reading
     with open(file_path, 'rb') as video_file:
@@ -62,26 +76,23 @@ def encode_backwards_seeking(file_path, chunk_size=1048576):
             try:
                 video_file.seek(chunks * chunk_size)
                 chunk = video_file.read(chunk_size)
+                # This is the last piece of the file
                 if previous_chunk is None:
-                    hashed_binaries.append(chunk)
                     previous_chunk = chunk
                 elif previous_chunk is not None:
                     hashed_chunk = chunk + hashlib.sha256(previous_chunk).digest()
-                    hashed_binaries.append(hashed_chunk)
                     previous_chunk = hashed_chunk
                 else:
                     break
-
+                open(f"{directory_name}/b{chunks}h{chunks + 1}.bin", "wb").write(previous_chunk)
                 chunks -= 1
             # Do some basic error handling for now to know that something bad happened
             except Exception as e:
                 logging.error('Encoding error: {}'.format(e))
+        open(f"{directory_name}/h0.bin", "wb").write(hashlib.sha256(previous_chunk).digest())
 
-    hashed_binaries.reverse()
-
-    logging.debug("Encoding complete. Encoded chunks: {}".format(hashed_binaries))
-
-    return hashlib.sha256(hashed_binaries[0]).digest(), hashed_binaries
+    logging.debug("Hashing complete")
+    return
 
 
 if __name__ == "__main__":
@@ -105,24 +116,9 @@ if __name__ == "__main__":
     else:
         logging.basicConfig(level=logging.ERROR)
 
-    h0, hashed_results = None, None
-    directory_name = args.filepath[0:args.filepath.rfind('.')]
-
     if args.method == "forward-backwards":
-        h0, hashed_results = encode_forward_backwards(file_path=args.filepath, chunk_size=args.chunk_size)
+        encode_forward_backwards(file_path=args.filepath, chunk_size=args.chunk_size)
     elif args.method == "backwards-seeking":
-        h0, hashed_results = encode_backwards_seeking(file_path=args.filepath, chunk_size=args.chunk_size)
-    try:
-        os.mkdir(directory_name)
-    except FileExistsError as fee:
-        # Do nothing if the directory already exists
-        pass
-    # Change to the directory
-    os.chdir(directory_name)
-
-    # Write out the binary files
-    open("h0.bin", "wb").write(h0)
-    for i in range(0, len(hashed_results)):
-        open(f"b{i}h{i+1}.bin", "wb").write(hashed_results[i])
+        encode_backwards_seeking(file_path=args.filepath, chunk_size=args.chunk_size)
 
     print("Successfully chunked and hashed file.")

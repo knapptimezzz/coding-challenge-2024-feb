@@ -107,3 +107,19 @@ Now one could argue that the **whole purpose** of Kontain is that it's about how
 
 
 * I implemented some basic logging to get messages out of the code if you wanted to compare some hashes on the command line.
+
+## Additional Updates
+
+After further discussion with Serge, I have decided to investigate and implement a few points of discussion we had.
+
+### O_DIRECT
+
+In an effort to be more efficient and reduce the amount of copying that happens under the hood through normal kernel operations, we discussed `O_DIRECT` which is a way for a file to be opened and to NOT have it cached before entering into the program memory. We discussed the components of that and how there are options in the kernel to help with this. Given that python has a lot of C under the hood, I tried to add `O_DIRECT` as a flag, which is in option in the `os.open()` [method for python](https://docs.python.org/3.10/library/os.html#os.open). I am developing on a Mac and so these methods are not available to me. However, I did some investigation and these options are not available for Mac testing. I could spin up an AWS instance and implement these changes. Additional research also puts this as an `os.open` instead of the `open()` which is a built in pything funciton. There are several differences that would require some additional changes to the code.
+
+### Smaller Files with Writing
+
+Additionally what we discussed is ways to keep the memory down when writing the files. It would be better to write the files out as they come in than to keep hold of all the data and write it out when ending the program like before. Therefore, much of the file output logic has been moved into the functions themselves. I still kept both functions as a way to demonstrate where my logic and thinking where at.
+
+### Single Binary - In progress
+
+Lastly, we discussed making a single, large file. Rather than treating the application like the chunking method, abstract that thinking away to a webserver and pretend these python scripts are on the other sides of that.
